@@ -1,3 +1,9 @@
+## `.env` file
+
+```aiignore
+DATABASE_URL="postgresql://[user-id]:[password]@localhost:5432/sillok"
+```
+
 ## folder structure
 
 ```aiignore
