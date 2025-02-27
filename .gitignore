@@ -1,0 +1,58 @@
+# Node modules
+node_modules/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build artifacts
+dist/
+build/
+
+# TypeScript
+*.tsbuildinfo
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE-related files
+.idea/
+.vscode/
+*.iml
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# npm package log files
+package-lock.json
+yarn.lock
+
+# Debug output
+debug.log*
+*.log
+
+# Temporary files
+tmp/
+temp/
+
+# Prisma
+.prisma/
+.prisma/client/
+*.db
+
+# Prettier and ESLint cache
+.prettier*
+.eslintcache
+
+# Optional: If you use coverage tools like Istanbul
+coverage/
+
+# Nodemon
+.nodemon-debug.json
+
+# Git-specific
+*.orig

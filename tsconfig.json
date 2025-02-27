@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "ES2020", // 또는 그 이상의 버전
+    "module": "ESNext", // ESM 모듈 시스템 사용
+    "moduleResolution": "node", // Node.js 모듈 해석 방식
+    "outDir": "./dist", // 컴파일된 파일의 출력 디렉토리
+    "rootDir": "./src", // 소스 파일의 루트 디렉토리
+    "strict": true, // 엄격한 타입 검사
+    "esModuleInterop": true, // ES 모듈 호환성
+    "skipLibCheck": true, // 라이브러리 타입 검사 건너뛰기
+    "forceConsistentCasingInFileNames": true // 파일명 대소문자 일관성 검사
+  },
+  "include": ["src/**/*"], // 포함할 파일 경로
+  "exclude": ["node_modules"] // 제외할 디렉토리
+}
