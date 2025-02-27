@@ -1,0 +1,43 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// 📌 왕 정보 (예: 광해군, 선조)
+model King {
+  id       String        @id // 실록 XML 데이터에 있는 ID 사용
+  name     String // 예: "광해군"
+  title    String // 예: "광해군일기"
+  years    Year[] // 연도 (즉위 기간)
+  articles ArticleKing[]
+}
+
+// 📌 왕의 즉위년 및 연도 데이터
+model Year {
+  id     String @id // 예: "광해군_1608"
+  value  Int // 예: 1608 (즉위년)
+  title  String // 예: "광해 즉위년", "광해 1년"
+  kingId String // 광해군 ID
+  king   King   @relation(fields: [kingId], references: [id])
+}
+
+// 📌 기사 (한자 원문 및 번역본)
+model Article {
+  id    String        @id // 실록 원문 ID 사용
+  ch    String // 한자 원문
+  ko    String? // 한글 해석 (스크래핑 후 저장)
+  kings ArticleKing[]
+}
+
+// 📌 기사 - 왕 관계 (다대다 관계)
+model ArticleKing {
+  id        String  @id @default(uuid())
+  articleId String
+  kingId    String
+  article   Article @relation(fields: [articleId], references: [id])
+  king      King    @relation(fields: [kingId], references: [id])
+}
