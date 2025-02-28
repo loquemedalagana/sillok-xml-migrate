@@ -4,6 +4,19 @@
 DATABASE_URL="postgresql://[user-id]:[password]@localhost:5432/sillok"
 ```
 
+---
+
+## schema 구조
+
+| 모델 | 설명 |
+| --- | --- |
+| **King (왕 정보)** | 실록의 `id`, `name`, `title`을 저장 |
+| **Year (연도 정보)** | 왕(`King`)과 연도를 연결 (예: "광해 1년") |
+| **Article (기사)** | XML 원문에서 기사 ID(`id`), 한자 원문(`ch`), 한글 번역(`ko`) 저장 |
+| **ArticleKing (기사-왕 관계)** | 하나의 기사가 여러 왕과 연관될 수 있으므로 **다대다(N:N) 관계**로 설정 |
+
+---
+
 ## folder structure
 
 ```aiignore
