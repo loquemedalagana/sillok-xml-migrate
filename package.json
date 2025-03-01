@@ -4,9 +4,9 @@
   "version": "1.0.0",
   "main": "dist/index.js",
   "scripts": {
-    "start": "node dist/index.js",
-    "build": "tsc",
     "dev": "nodemon --watch 'src/**/*.ts' --exec 'node --loader ts-node/esm' src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
     "test": "node --no-warnings --experimental-vm-modules node_modules/.bin/jest",
     "lint": "eslint 'src/**/*.ts'",
     "lint:fix": "eslint 'src/**/*.ts' --fix"
