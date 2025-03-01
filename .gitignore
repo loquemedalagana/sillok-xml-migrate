@@ -56,3 +56,6 @@ coverage/
 
 # Git-specific
 *.orig
+
+# processed
+data/processed
