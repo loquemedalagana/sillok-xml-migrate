@@ -4,8 +4,12 @@ import path from 'path';
 import fs from 'fs/promises';
 import { PrismaClient } from '@prisma/client';
 
-import { getKingIdentifier } from './constants/index.js';
-import { parseXML, parseDtd } from './parsers/index.js';
+import {
+  getKingIdentifier,
+  kingIdentifierList,
+  kingNameMap,
+} from './constants/index.js';
+import { writeKingJson } from './utils/writeKingJson.js';
 
 // ES Module 환경에서 __dirname 사용하기
 const __filename = fileURLToPath(import.meta.url);
@@ -26,49 +30,7 @@ export async function runApp(kingName: string) {
       throw new Error(`${kingName}에 해당하는 identifier가 존재하지 않습니다.`);
     }
 
-    // 2) XML 파일명 결정 (여기서는 "2nd_wj" + "a_1" = "2nd_wja_1.xml" 가정)
-    const originalXMLFileName = `2nd_w${kingIdentifier}a_100`;
-
-    // 3) XML, DTD 경로
-    const xmlFilePath = path.join(
-      __dirname,
-      `../data/original/${originalXMLFileName}.xml`,
-    );
-    const dtdFilePath = path.join(__dirname, '../data/original/history.dtd');
-
-    // 4) XML 파싱
-    const xmlData = await parseXML(xmlFilePath);
-    console.log('XML 파싱 결과:', JSON.stringify(xmlData, null, 2));
-
-    // 5) DTD 파싱
-    const dtdData = await parseDtd(dtdFilePath);
-    // console.log('DTD 파싱 결과:', JSON.stringify(dtdData, null, 2));
-
-    // 6) 결과 저장할 폴더
-    const outputDir = path.join(__dirname, '../data/processed/json');
-    await fs.mkdir(outputDir, { recursive: true });
-
-    // 7) 파싱 결과를 JSON 파일로 저장
-
-    const xmlOutputPath = path.join(
-      outputDir,
-      `parsed-xml-${originalXMLFileName.replace('2nd_w', '')}.json`,
-    );
-    const dtdOutputPath = path.join(outputDir, 'parsed-dtd.json');
-
-    await fs.writeFile(
-      xmlOutputPath,
-      JSON.stringify(xmlData, null, 2),
-      'utf-8',
-    );
-    console.log(`XML 파싱 결과가 ${xmlOutputPath}에 저장되었습니다.`);
-
-    await fs.writeFile(
-      dtdOutputPath,
-      JSON.stringify(dtdData, null, 2),
-      'utf-8',
-    );
-    console.log(`DTD 파싱 결과가 ${dtdOutputPath}에 저장되었습니다.`);
+    await writeKingJson(kingIdentifier as keyof typeof kingNameMap, __dirname);
 
     // 8) DB 연결 테스트
     await prisma.$connect();
