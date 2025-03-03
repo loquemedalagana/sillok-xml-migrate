@@ -95,12 +95,28 @@ export async function writeTitleJson(
       return;
     }
 
-    // 출력 폴더: data/processed/json/titles/[kingIdentifier]
-    const outputDir = path.join(
-      __dirname,
-      `../data/processed/json/titles/${kingIdentifier}`,
+    // 1) 그룹별로 묶어서, 그룹명(예: woa, wob 등) 별로 개수를 출력
+    const groupedFiles = matchingFiles.reduce<Record<string, string[]>>(
+      (acc, fileName) => {
+        // "2nd_woa_100.xml" => 정규식으로 "woa" 그룹 추출
+        // ^2nd_(w[^_]+)_.*$
+        const match = fileName.match(/^2nd_(w[^_]+)_/);
+        if (match && match[1]) {
+          const groupName = match[1]; // 예: "woa"
+          if (!acc[groupName]) {
+            acc[groupName] = [];
+          }
+          acc[groupName].push(fileName);
+        }
+        return acc;
+      },
+      {},
     );
-    await fs.mkdir(outputDir, { recursive: true });
+
+    // 그룹별 파일 수 콘솔 출력
+    for (const groupName of Object.keys(groupedFiles)) {
+      console.log(`${groupName}: ${groupedFiles[groupName].length}개`);
+    }
 
     // 각 파일별로 sax 파서를 통해 제목 데이터만 추출 후 JSON으로 저장
     await Promise.all(
@@ -108,8 +124,20 @@ export async function writeTitleJson(
         const filePath = path.join(originalDir, fileName);
         const extractedData = await extractTitleData(filePath);
 
+        // "2nd_woa_100.xml" => "woa" 폴더명 추출
+        const newDirname = fileName.replace(/^2nd_(w[^_]+)_.*$/, '$1');
+
+        // "woa" 폴더가 없으면 생성
+        const outputDir = path.join(
+          __dirname,
+          `../data/processed/json/titles/${newDirname}`,
+        );
+        await fs.mkdir(outputDir, { recursive: true });
+
         // 파일명은 그대로 사용하고, 확장자만 .json으로 변경 (예: "2nd_wja_100.xml" → "2nd_wja_100.json")
-        const jsonFileName = fileName.replace(/\.xml$/, '.json');
+        const jsonFileName = fileName
+          .replace(/\.xml$/, '_titles.json')
+          .replace('2nd_', '');
         const jsonOutputPath = path.join(outputDir, jsonFileName);
 
         await fs.writeFile(
