@@ -1,12 +1,18 @@
 import { kingNameMap } from '../constants/index.js';
 import path from 'path';
-import { parseStringPromise } from 'xml2js';
-import { promises as fs } from 'fs';
 
-async function parseXML(filePath: string) {
+import { promises as fs } from 'fs';
+import { parseStringPromise } from 'xml2js';
+
+export async function parseXML(filePath: string) {
   try {
     const xmlData = await fs.readFile(filePath, 'utf-8');
-    return await parseStringPromise(xmlData);
+    const options = {
+      explicitArray: false, // 단일 자식 요소를 배열이 아닌 객체로 반환
+      mergeAttrs: true, // 태그의 속성들을 부모 객체에 병합
+    };
+    const jsonData = await parseStringPromise(xmlData, options);
+    return jsonData;
   } catch (error) {
     console.error(`XML 파싱 오류 (${filePath}):`, error);
     return null;
