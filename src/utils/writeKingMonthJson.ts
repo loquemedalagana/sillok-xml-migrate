@@ -13,8 +13,7 @@ function extractMonthIds(filePath: string): Promise<string[]> {
   return new Promise((resolve, reject) => {
     const stream = createReadStream(filePath, 'utf-8');
     const parser = sax.createStream(true, { trim: true });
-
-    const ids: Array<string> = [];
+    const ids: string[] = [];
 
     parser.on('opentag', (node) => {
       if (node.name === 'level3') {
@@ -38,10 +37,10 @@ function extractMonthIds(filePath: string): Promise<string[]> {
 }
 
 /**
- * 주어진 kingIdentifier (예: 'wja')에 해당하는 파일들을
- * 원본 디렉토리(../data/original)에서 찾아, sax를 통해 <level3> 태그의 id 값만 추출한 후
- * 폴더 경로 `data/processed/json/months/[kingIdentifier]_monthIds.json` 에 JSON 파일로 저장하는 함수.
- * 예: data/processed/json/months/wja_monthIds.json
+ * 주어진 kingIdentifier (예: 'oa')에 해당하는 파일들을
+ * 원본 디렉토리(../data/original)에서 찾아, 파일명에서 그룹명(예: woa, wob)을 추출한 후
+ * 각 그룹별로 sax를 통해 <level3> 태그의 id 값만 추출하여
+ * 폴더 경로 `data/processed/json/months/` 에 그룹별 JSON 파일 (예: woa_monthIds.json, wob_monthIds.json)로 저장하는 함수.
  */
 export async function writeMonthIdsJson(
   kingIdentifier: keyof typeof kingNameMap,
@@ -51,10 +50,16 @@ export async function writeMonthIdsJson(
 
   try {
     const files = await fs.readdir(originalDir);
-    // 파일명이 kingIdentifier로 시작하는 파일들 필터링 (예: "wja")
-    const matchingFiles = files.filter((fileName) =>
-      fileName.startsWith(`2nd_w${kingIdentifier}a`),
-    );
+    // 정규식을 사용하여 파일명에서 그룹명을 추출하고, kingIdentifier와 매칭되는 파일들만 필터링.
+    const matchingFiles = files.filter((fileName) => {
+      const match = fileName.match(/^2nd_(w[^_]+)_/);
+      if (match && match[1]) {
+        // 그룹명이 kingIdentifier로 시작하는지 확인
+        // 예를 들어 kingIdentifier가 "oa"라면, "woa" 또는 "wob" 등에서 "oa"가 포함될 수 있음.
+        return match[1].includes(kingIdentifier);
+      }
+      return false;
+    });
 
     if (matchingFiles.length === 0) {
       console.error(
@@ -63,31 +68,46 @@ export async function writeMonthIdsJson(
       return;
     }
 
-    console.log(
-      `Found ${matchingFiles.length} file(s) for ${kingNameMap[kingIdentifier]}`,
+    // 그룹별로 파일명을 묶음 (예: "woa": [...], "wob": [...])
+    const groupedFiles = matchingFiles.reduce<Record<string, string[]>>(
+      (acc, fileName) => {
+        const match = fileName.match(/^2nd_(w[^_]+)_/);
+        if (match && match[1]) {
+          const groupName = match[1];
+          if (!acc[groupName]) {
+            acc[groupName] = [];
+          }
+          acc[groupName].push(fileName);
+        }
+        return acc;
+      },
+      {},
     );
 
-    // 각 파일별로 sax 파서를 통해 데이터를 추출하고, 모든 id를 합침
-    let allIds: string[] = [];
-    for (const fileName of matchingFiles) {
-      const filePath = path.join(originalDir, fileName);
-      const extractedIds = await extractMonthIds(filePath);
-      allIds = allIds.concat(extractedIds);
-    }
-
-    // 단일 JSON 파일로 저장: data/processed/json/months/[kingIdentifier]_monthIds.json
+    // 각 그룹별로 파일들을 처리하여 JSON 파일 생성
     const outputDir = path.join(__dirname, '../data/processed/json/months');
     await fs.mkdir(outputDir, { recursive: true });
 
-    const jsonFileName = `w${kingIdentifier}a_monthIds.json`;
-    const jsonOutputPath = path.join(outputDir, jsonFileName);
+    for (const groupName in groupedFiles) {
+      const fileNames = groupedFiles[groupName];
+      let allIds: string[] = [];
+      for (const fileName of fileNames) {
+        const filePath = path.join(originalDir, fileName);
+        const extractedIds = await extractMonthIds(filePath);
+        allIds = allIds.concat(extractedIds);
+      }
 
-    await fs.writeFile(
-      jsonOutputPath,
-      JSON.stringify(allIds, null, 2),
-      'utf-8',
-    );
-    console.log(`Processed and wrote JSON to ${jsonOutputPath}`);
+      // 그룹별 JSON 파일명 (예: woa_monthIds.json)
+      const jsonFileName = `${groupName}_monthIds.json`;
+      const jsonOutputPath = path.join(outputDir, jsonFileName);
+
+      await fs.writeFile(
+        jsonOutputPath,
+        JSON.stringify(allIds, null, 2),
+        'utf-8',
+      );
+      console.log(`Processed and wrote JSON to ${jsonOutputPath}`);
+    }
   } catch (error) {
     console.error('에러 발생:', error);
   }
