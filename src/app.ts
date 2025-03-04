@@ -9,7 +9,7 @@ import {
   kingIdentifierList,
   kingNameMap,
 } from './constants/index.js';
-import { writeKingJson, writeTitleJson } from './utils/index.js';
+import { writeKingJson, writeTitleJson, writeMonthIdsJson } from './utils/index.js';
 
 // ES Module 환경에서 __dirname 사용하기
 const __filename = fileURLToPath(import.meta.url);
@@ -32,6 +32,7 @@ export async function runApp(kingName: string) {
 
     await writeKingJson(kingIdentifier as keyof typeof kingNameMap, __dirname);
     await writeTitleJson(kingIdentifier as keyof typeof kingNameMap, __dirname)
+    await writeMonthIdsJson(kingIdentifier as keyof typeof kingNameMap, __dirname);
 
     // 8) DB 연결 테스트
     await prisma.$connect();
